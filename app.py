@@ -2,7 +2,7 @@
 # streamlit , pandas, plotly.express, calendar, datetime
 import streamlit as st
 import pandas as pd 
-import plotly.express as px
+import matplotlib.pyplot as plt
 import calendar
 from datetime import date
 import database
@@ -139,8 +139,18 @@ def show_dashboard():
         category_totals = df.groupby("category", as_index=False)["amount"].sum()
         with left:
             st.subheader("Spending by category")
-            fig = px.pie(category_totals, names="category", values="amount", hole=0.45)
-            st.plotly_chart(fig, use_container_width=True)
+            fig, ax = plt.subplots(figsize=(5, 5))
+
+            ax.pie(
+                category_totals["amount"],
+                labels=category_totals["category"],
+                autopct="%1.1f%%"
+            )
+
+            ax.set_title("Category Spending")
+
+            st.pyplot(fig)
+            
         with right:
             st.subheader("Monthly spending trend")
             monthly = (
@@ -153,8 +163,20 @@ def show_dashboard():
             if monthly.empty:
                 st.info("Not enough dated expenses to show a trend.")
             else:
-                fig = px.bar(monthly, x="month", y="amount", labels={"month": "Month", "amount": "Amount (₹)"})
-                st.plotly_chart(fig, use_container_width=True)
+                fig, ax = plt.subplots(figsize=(6, 4))
+
+                ax.bar(
+                    monthly["month"],
+                    monthly["amount"]
+                )
+
+                ax.set_xlabel("Month")
+                ax.set_ylabel("Amount (₹)")
+                ax.set_title("Monthly Spending Trend")
+
+                plt.xticks(rotation=45)
+
+                st.pyplot(fig)  
 
     st.subheader("Budget alerts for this month")
     if not budget_rows:
@@ -413,10 +435,34 @@ def show_analytics():
     left, right = st.columns(2)
     with left:
         st.subheader("Category breakdown")
-        st.plotly_chart(px.pie(cat_totals, names="category", values="amount", hole=0.4), use_container_width=True)
+        fig, ax = plt.subplots()
+
+        ax.pie(
+            cat_totals["amount"],
+            labels=cat_totals["category"],
+            autopct="%1.1f%%"
+        )
+
+        ax.set_title("Category Breakdown")
+
+        st.pyplot(fig)
+        
     with right:
         st.subheader("Compare categories")
-        st.plotly_chart(px.bar(cat_totals, x="category", y="amount", labels={"amount": "Amount (₹)"}), use_container_width=True)
+        fig, ax = plt.subplots()
+
+        ax.bar(
+            cat_totals["category"],
+            cat_totals["amount"]
+        )
+
+        ax.set_xlabel("Category")
+        ax.set_ylabel("Amount (₹)")
+        ax.set_title("Compare Categories")
+
+        plt.xticks(rotation=45, ha="right")
+
+        st.pyplot(fig)
 
     st.subheader("Filtered transactions")
     shown = df.copy()
